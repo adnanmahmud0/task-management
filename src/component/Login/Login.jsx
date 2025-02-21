@@ -1,7 +1,14 @@
 import { FaGoogle } from 'react-icons/fa';
 import taskManagement from '../../assets/logowhte.png';
+import { useForm } from 'react-hook-form';
 
 const Login = () => {
+  const { register, handleSubmit } = useForm();
+
+  const onSubmit = (data) => {
+    console.log(data); // Log the form data
+  };
+
   return (
     <div className="font-[sans-serif] bg-gradient-to-r from-[#3086B3] via-[#0FF0C8] to-[#3086B3] text-gray-800">
       <div className="min-h-screen flex flex-col items-center justify-center lg:p-6 p-4">
@@ -28,12 +35,16 @@ const Login = () => {
           </div>
 
           {/* Login Form */}
-          <form className="bg-white rounded-xl px-6 py-8 space-y-6 max-w-md md:ml-auto w-full">
+          <form
+            className="bg-white rounded-xl px-6 py-8 space-y-6 max-w-md md:ml-auto w-full"
+            onSubmit={handleSubmit(onSubmit)} // Handle form submission
+          >
             <h3 className="text-3xl font-extrabold mb-12">Sign in</h3>
 
             {/* Email and Password Inputs */}
             <div className="space-y-3">
               <input
+                {...register('email', { required: true })}
                 name="email"
                 type="email"
                 autoComplete="email"
@@ -42,6 +53,7 @@ const Login = () => {
                 placeholder="Email address"
               />
               <input
+                {...register('password', { required: true })}
                 name="password"
                 type="password"
                 autoComplete="current-password"
