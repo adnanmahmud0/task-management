@@ -7,12 +7,14 @@ import {
 
 import './index.css'
 import { router } from './component/Routes/Router';
-
+import AuthProvider from './component/provider/AuthProvider';
 
 
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </StrictMode>,
 )

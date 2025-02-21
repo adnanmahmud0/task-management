@@ -1,12 +1,16 @@
 import { FaGoogle } from 'react-icons/fa';
 import taskManagement from '../../assets/logowhte.png';
 import { useForm } from 'react-hook-form';
+import { useContext } from 'react';
+import { AuthContext } from '../provider/AuthProvider';
 
 const Login = () => {
+    const {loginUser} = useContext(AuthContext);
   const { register, handleSubmit } = useForm();
 
   const onSubmit = (data) => {
     console.log(data); // Log the form data
+    loginUser(data.email, data.password);
   };
 
   return (
@@ -73,7 +77,7 @@ const Login = () => {
             {/* Login Button */}
             <button
               type="submit"
-              className="w-full shadow-xl py-3 px-6 text-sm font-semibold rounded-md text-white bg-gray-800 hover:bg-[#222] focus:outline-none"
+              className="cursor-pointer w-full shadow-xl py-3 px-6 text-sm font-semibold rounded-md text-white bg-gray-800 hover:bg-[#222] focus:outline-none"
             >
               Log in
             </button>

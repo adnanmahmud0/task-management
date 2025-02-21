@@ -1,11 +1,16 @@
 import { FaGoogle } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
+import { useContext } from 'react';
+import { AuthContext } from '../provider/AuthProvider';
 
 const Register = () => {
+    const {createUser, updateUserProfile} = useContext(AuthContext);
     const { register, handleSubmit } = useForm();
 
     const onSubmit = (data) => {
-        console.log(data.name);
+        console.log(data);
+        createUser(data.email, data.password);
+        updateUserProfile(data.name, data.image);
     };
 
     return (
@@ -21,6 +26,15 @@ const Register = () => {
                             type="text" 
                             className="bg-gray-100 w-full text-gray-800 text-sm px-4 py-2.5 rounded-md border focus:bg-transparent focus:border-black outline-none transition-all" 
                             placeholder="Enter name" 
+                        />
+                    </div>
+                    <div>
+                        <label className="text-gray-800 text-sm mb-2 block">Image</label>
+                        <input 
+                            {...register('image', { required: true })} 
+                            type="text" 
+                            className="bg-gray-100 w-full text-gray-800 text-sm px-4 py-2.5 rounded-md border focus:bg-transparent focus:border-black outline-none transition-all" 
+                            placeholder="Enter Image Link" 
                         />
                     </div>
                     <div>
@@ -42,7 +56,7 @@ const Register = () => {
                         />
                     </div>
 
-                    <button type="submit" className="w-full py-3 px-6 text-sm tracking-wide rounded-md text-white bg-gray-800 hover:bg-gray-900 focus:outline-none transition-all">
+                    <button type="submit" className="cursor-pointer w-full py-3 px-6 text-sm tracking-wide rounded-md text-white bg-gray-800 hover:bg-gray-900 focus:outline-none transition-all">
                         Sign up
                     </button>
                 </form>
