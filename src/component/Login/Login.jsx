@@ -12,7 +12,21 @@ const Login = () => {
   const navigate = useNavigate();
 
   const googleHandeler = () => {
-    signInWithGoogle();
+    signInWithGoogle()
+      .then(result => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Login Successful',
+          text: 'You have successfully logged in!',
+        }).then(() => navigate('/'));
+      })
+      .catch(error => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Login Failed',
+          text: error.message || 'Invalid email or password.',
+        });
+      });
   };
 
   const onSubmit = (data) => {

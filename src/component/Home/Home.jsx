@@ -49,7 +49,13 @@ const Home = () => {
           task._id === updatedTask._id ? updatedTask : task
         )
       );
-      Swal.fire("Success", "Task updated in real-time", "success");
+      Swal.fire({
+        position: "top-end",
+        icon: "success",
+        title: "Task category updated",
+        showConfirmButton: false,
+        timer: 1500,
+      });
     });
 
     return () => {
@@ -91,7 +97,7 @@ const Home = () => {
         Swal.fire({
           position: "top-end",
           icon: "success",
-          title: "Task saved successfully",
+          title: "Task category updated",
           showConfirmButton: false,
           timer: 1500,
         });
