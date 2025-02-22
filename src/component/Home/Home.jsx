@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { AiFillCheckCircle, AiOutlineWarning, AiFillCloseCircle, AiOutlineMail, AiFillEdit, AiFillDelete } from "react-icons/ai";
 import axios from "axios";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";  // Import DnD components
 
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -88,20 +89,37 @@ const Home = () => {
     }
   };
 
+  const handleDragEnd = async (result) => {
+    const { destination, source } = result;
+    if (!destination) return; // If no destination (dropped outside)
+
+    const movedTask = tasks.find((task) => task._id === result.draggableId);
+    if (!movedTask) return;
+
+    // Exclude _id from the update data
+    const { _id, ...updateData } = { ...movedTask, category: destination.droppableId };
+
+    try {
+        await axios.put(`http://localhost:3000/tasks/${_id}`, updateData);
+        fetchTasks(); // Refresh tasks after update
+    } catch (error) {
+        console.error("Error updating task category:", error);
+    }
+};
+
+
   return (
     <div className="mt-30 mb-10">
       <div className="max-w-7xl mx-auto">
-        <div>
-          <button
-            type="button"
-            className="cursor-pointer w-10 h-10 inline-flex items-center justify-center rounded-full border-none outline-none bg-[#00EFC5] hover:bg-[#3086B3] active:bg-[#00EFC5]"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14px" fill="#fff" viewBox="0 0 512 512">
-              <path d="M467 211H301V45c0-24.853-20.147-45-45-45s-45 20.147-45 45v166H45c-24.853 0-45 20.147-45 45s20.147 45 45 45h166v166c0 24.853 20.147 45 45 45s45-20.147 45-45V301h166c24.853 0 45-20.147 45-45s-20.147-45-45-45z" />
-            </svg>
-          </button>
-        </div>
+        <button
+          type="button"
+          className="cursor-pointer w-10 h-10 inline-flex items-center justify-center rounded-full border-none outline-none bg-[#00EFC5] hover:bg-[#3086B3] active:bg-[#00EFC5]"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14px" fill="#fff" viewBox="0 0 512 512">
+            <path d="M467 211H301V45c0-24.853-20.147-45-45-45s-45 20.147-45 45v166H45c-24.853 0-45 20.147-45 45s20.147 45 45 45h166v166c0 24.853 20.147 45 45 45s45-20.147 45-45V301h166c24.853 0 45-20.147 45-45s-20.147-45-45-45z" />
+          </svg>
+        </button>
 
         {isModalOpen && (
           <div className="fixed inset-0 p-4 flex flex-wrap justify-center items-center w-full h-full z-[1000] before:fixed before:inset-0 before:w-full before:h-full before:bg-[rgba(0,0,0,0.5)] overflow-auto font-[sans-serif]">
@@ -178,35 +196,56 @@ const Home = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-md:max-w-md mx-auto">
-          {['To-Do', 'In Progress', 'Done'].map((status) => (
-            <div key={status} className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all">
-              <div className="p-8">
-                <div className="text-center text-2xl font-bold text-gray-800">{status}</div>
-                <div className="font-[sans-serif] space-y-6 mx-auto w-max mt-4">
-                  {tasks.filter(task => task.category === status).map((task) => (
-                    <div key={task._id} className="shadow-[0_3px_10px_-3px_rgba(6,81,237,0.3)] text-black flex w-max max-w-sm rounded-md overflow-hidden relative" role="alert">
-                      <div className={`flex items-center justify-center ${status === 'To-Do' ? 'bg-blue-500' : status === 'In Progress' ? 'bg-yellow-500' : 'bg-green-500'}`}>
-                        {status === 'To-Do' && <AiOutlineMail className="w-5 shrink-0 text-white" />}
-                        {status === 'In Progress' && <AiOutlineWarning className="w-5 shrink-0 text-white" />}
-                        {status === 'Done' && <AiFillCheckCircle className="w-5 shrink-0 text-white" />}
-                      </div>
-                      <div className="py-2 mx-4">
-                        <p className="text-sm font-semibold">{task.title}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{task.description}</p>
-                        <p className="text-xs text-gray-500 mt-2">Timestamp: {task.timestamp}</p>
-                      </div>
-                      <div className="flex items-center gap-2 absolute top-2 right-2">
-                        <AiFillEdit className="w-5 h-5 text-blue-600 cursor-pointer" onClick={() => handleEdit(task)} />
-                        <AiFillDelete className="w-5 h-5 text-red-600 cursor-pointer" onClick={() => handleDelete(task._id)} />
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-md:max-w-md mx-auto">
+            {['To-Do', 'In Progress', 'Done'].map((status) => (
+              <Droppable droppableId={status} key={status}>
+                {(provided) => (
+                  <div
+                    className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all"
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                  >
+                    <div className="p-8">
+                      <div className="text-center text-2xl font-bold text-gray-800">{status}</div>
+                      <div className="font-[sans-serif] space-y-6 mx-auto w-max mt-4">
+                        {tasks.filter(task => task.category === status).map((task, index) => (
+                          <Draggable key={task._id} draggableId={task._id} index={index}>
+                            {(provided) => (
+                              <div
+                                className="shadow-[0_3px_10px_-3px_rgba(6,81,237,0.3)] text-black flex w-max max-w-sm rounded-md overflow-hidden relative"
+                                role="alert"
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                              >
+                                <div className={`flex items-center justify-center ${status === 'To-Do' ? 'bg-blue-500' : status === 'In Progress' ? 'bg-yellow-500' : 'bg-green-500'}`}>
+                                  {status === 'To-Do' && <AiOutlineMail className="w-5 shrink-0 text-white" />}
+                                  {status === 'In Progress' && <AiOutlineWarning className="w-5 shrink-0 text-white" />}
+                                  {status === 'Done' && <AiFillCheckCircle className="w-5 shrink-0 text-white" />}
+                                </div>
+                                <div className="py-2 mx-4">
+                                  <p className="text-sm font-semibold">{task.title}</p>
+                                  <p className="text-xs text-gray-400 mt-0.5">{task.description}</p>
+                                  <p className="text-xs text-gray-500 mt-2">Timestamp: {task.timestamp}</p>
+                                </div>
+                                <div className="flex items-center gap-2 absolute top-2 right-2">
+                                  <AiFillEdit className="w-5 h-5 text-blue-600 cursor-pointer" onClick={() => handleEdit(task)} />
+                                  <AiFillDelete className="w-5 h-5 text-red-600 cursor-pointer" onClick={() => handleDelete(task._id)} />
+                                </div>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+                  </div>
+                )}
+              </Droppable>
+            ))}
+          </div>
+        </DragDropContext>
       </div>
     </div>
   );
