@@ -1,6 +1,4 @@
-Here's your updated README file incorporating the **technologies and dependencies** from your `package.json`:  
 
-```markdown
 # Task Management Application
 
 ## 📌 Overview
@@ -8,7 +6,7 @@ Here's your updated README file incorporating the **technologies and dependencie
 The **Task Management Application** is a powerful tool for organizing tasks efficiently. Users can **add, edit, delete, and reorder** tasks using a **drag-and-drop interface**, with instant database synchronization. The app provides **real-time updates** and a **clean, responsive UI**, making it accessible across desktop and mobile devices.
 
 ## 🚀 Live Demo
-[Click Here to View the Live App](#) _(Replace with actual link)_
+[Click Here to View the Live App](https://task-management-ad6c0.web.app/)
 
 ## 📂 Table of Contents
 
@@ -91,8 +89,8 @@ The **Task Management Application** is a powerful tool for organizing tasks effi
 
 ### **1️⃣ Clone the Repository**
 ```bash
-git clone https://github.com/your-username/task-management-app.git
-cd task-management-app
+git clone https://github.com/adnanmahmud0/task-management.git
+cd task-management
 ```
 
 ### **2️⃣ Install Dependencies**
@@ -161,7 +159,12 @@ The app should now be running at `http://localhost:5173/`.
 - 🔔 **Notifications**: Real-time alerts for deadlines.
 - 📝 **Activity Logs**: Track task modifications.
 
-
 ## 📜 License
 
 This project is licensed under the **adnanmahmud99**.
+
+---
+
+**Repository Links:**
+- Frontend: [GitHub Frontend](https://github.com/adnanmahmud0/task-management/edit/main/README.md)
+- Backend: [GitHub Server](https://github.com/adnanmahmud0/task-management_server)
