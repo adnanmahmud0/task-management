@@ -18,7 +18,7 @@ const Footer = () => {
           </div>
 
           {/* Navigation Links */}
-          <ul className="flex items-center justify-center flex-wrap gap-y-2 md:justify-end space-x-6">
+          {/* <ul className="flex items-center justify-center flex-wrap gap-y-2 md:justify-end space-x-6">
             {['Home', 'About', 'Services', 'Contact'].map((item, index) => (
               <li key={index}>
                 <a
@@ -29,7 +29,7 @@ const Footer = () => {
                 </a>
               </li>
             ))}
-          </ul>
+          </ul> */}
         </div>
 
         {/* Divider */}

@@ -7,6 +7,7 @@ import Root from '../../component/Root/Root';
 import Home from '../../component/Home/Home';
 import Login from '../../component/Login/Login';
 import Register from '../../component/Register/Register';
+import PrivateRoute from "./PrivateRoute";
 
 export const router = createBrowserRouter([
     {
@@ -15,7 +16,7 @@ export const router = createBrowserRouter([
         children: [
             {
                 path: "/",
-                element: <Home></Home>,
+                element: <PrivateRoute><Home></Home></PrivateRoute>,
             },
             {
                 path: "/login",

@@ -1,12 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { AiFillCheckCircle, AiOutlineWarning, AiFillCloseCircle, AiOutlineMail, AiFillEdit, AiFillDelete } from "react-icons/ai";
 import axios from "axios";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";  // Import DnD components
-import io from "socket.io-client";  // Import socket.io-client
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import io from "socket.io-client";
+import { AuthContext } from "../provider/AuthProvider";
+import Swal from "sweetalert2";
 
-const socket = io("http://localhost:3000");  // Connect to the WebSocket server
+const socket = io(`${import.meta.env.VITE_api}`);
 
 const Home = () => {
+  const { user, loading } = useContext(AuthContext);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -25,34 +28,34 @@ const Home = () => {
     second: "2-digit",
   });
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (userEmail = user.email) => {
     try {
-      const response = await axios.get("http://localhost:3000/tasks");
+      const response = await axios.get(`${import.meta.env.VITE_api}/tasks`, {
+        params: { email: userEmail },
+      });
       setTasks(response.data);
     } catch (error) {
       console.error("Error fetching tasks:", error);
+      Swal.fire("Error", "Failed to fetch tasks", "error");
     }
   };
 
   useEffect(() => {
-    // Fetch initial tasks from the server
     fetchTasks();
 
-    // Listen for task updates through WebSocket
     socket.on("taskUpdated", (updatedTask) => {
-        setTasks((prevTasks) =>
-            prevTasks.map((task) =>
-                task._id === updatedTask._id ? updatedTask : task
-            )
-        );
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task._id === updatedTask._id ? updatedTask : task
+        )
+      );
+      Swal.fire("Success", "Task updated in real-time", "success");
     });
 
-    // Cleanup the WebSocket listener when the component unmounts
     return () => {
-        socket.off("taskUpdated");
+      socket.off("taskUpdated");
     };
-}, []);
-
+  }, []);
 
   const resetForm = () => {
     setTitle("");
@@ -64,82 +67,87 @@ const Home = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const taskData = {
+      email: user?.email,
       title,
       description,
       category,
       timestamp,
     };
-
+  
     try {
       if (isEditing) {
-        await axios.put(`http://localhost:3000/tasks/${editTaskId}`, taskData);
-        console.log("Task updated successfully");
+        await axios.put(`${import.meta.env.VITE_api}/tasks/${editTaskId}`, taskData);
+        Swal.fire({
+          position: "top-end",
+          icon: "success",
+          title: "Task updated successfully",
+          showConfirmButton: false,
+          timer: 1500,
+        });
       } else {
-        await axios.post("http://localhost:3000/tasks", taskData);
-        console.log("Task saved successfully");
+        await axios.post(`${import.meta.env.VITE_api}/tasks`, taskData);
+        Swal.fire({
+          position: "top-end",
+          icon: "success",
+          title: "Task saved successfully",
+          showConfirmButton: false,
+          timer: 1500,
+        });
       }
-
+  
       setIsModalOpen(false);
       resetForm();
       fetchTasks();
     } catch (error) {
       console.error("Error saving/updating task:", error);
+      Swal.fire("Error", "Failed to save/update task", "error");
     }
   };
-
-  const handleEdit = (task) => {
-    setIsModalOpen(true);
-    setTitle(task.title);
-    setDescription(task.description);
-    setCategory(task.category);
-    setIsEditing(true);
-    setEditTaskId(task._id);
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`http://localhost:3000/tasks/${id}`);
-      console.log("Task deleted successfully");
-      fetchTasks();
-    } catch (error) {
-      console.error("Error deleting task:", error);
-    }
-  };
-
+  
   const handleDragEnd = async (result) => {
     const { destination, source } = result;
-    if (!destination) return; // If no destination (dropped outside)
-
+    if (!destination) return;
+  
     const movedTask = tasks.find((task) => task._id === result.draggableId);
     if (!movedTask) return;
-
-    // Exclude _id from the update data
+  
     const { _id, ...updateData } = { ...movedTask, category: destination.droppableId };
-
+  
     try {
-      await axios.put(`http://localhost:3000/tasks/${_id}`, updateData);
-      socket.emit("taskUpdated", updateData);  // Emit the update to the WebSocket server
-      fetchTasks(); // Refresh tasks after update
+      await axios.put(`${import.meta.env.VITE_api}/tasks/${_id}`, updateData);
+      socket.emit("taskUpdated", updateData);
+      Swal.fire({
+        position: "top-end",
+        icon: "success",
+        title: "Task category updated",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      fetchTasks();
     } catch (error) {
       console.error("Error updating task category:", error);
+      Swal.fire("Error", "Failed to update task category", "error");
     }
   };
-
+  
 
   return (
-    <div className="mt-30 mb-10">
-      <div className="max-w-7xl mx-auto">
-        <button
-          type="button"
-          className="cursor-pointer w-10 h-10 inline-flex items-center justify-center rounded-full border-none outline-none bg-[#00EFC5] hover:bg-[#3086B3] active:bg-[#00EFC5]"
-          onClick={() => setIsModalOpen(true)}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="14px" fill="#fff" viewBox="0 0 512 512">
-            <path d="M467 211H301V45c0-24.853-20.147-45-45-45s-45 20.147-45 45v166H45c-24.853 0-45 20.147-45 45s20.147 45 45 45h166v166c0 24.853 20.147 45 45 45s45-20.147 45-45V301h166c24.853 0 45-20.147 45-45s-20.147-45-45-45z" />
-          </svg>
-        </button>
+    <div className="mt-40 mb-10">
+      <div className="max-w-7xl mx-auto h-screen">
+        <div className="flex items-center justify-center mb-8">
+          <button
+            type="button"
+            className="cursor-pointer w-[50%] h-10 inline-flex items-center justify-center rounded-full border-none outline-none bg-[#00EFC5] hover:bg-[#3086B3] active:bg-[#00EFC5]"
+            onClick={() => setIsModalOpen(true)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14px" fill="#fff" viewBox="0 0 512 512">
+              <path d="M467 211H301V45c0-24.853-20.147-45-45-45s-45 20.147-45 45v166H45c-24.853 0-45 20.147-45 45s20.147 45 45 45h166v166c0 24.853 20.147 45 45 45s45-20.147 45-45V301h166c24.853 0 45-20.147 45-45s-20.147-45-45-45z" />
+            </svg>
+          </button>
+        </div>
+
 
         {isModalOpen && (
           <div className="fixed inset-0 p-4 flex flex-wrap justify-center items-center w-full h-full z-[1000] before:fixed before:inset-0 before:w-full before:h-full before:bg-[rgba(0,0,0,0.5)] overflow-auto font-[sans-serif]">
@@ -217,7 +225,7 @@ const Home = () => {
         )}
 
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-md:max-w-md mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-md:max-w-md mx-auto">
             {['To-Do', 'In Progress', 'Done'].map((status) => (
               <Droppable droppableId={status} key={status}>
                 {(provided) => (
@@ -226,7 +234,7 @@ const Home = () => {
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                   >
-                    <div className="p-8">
+                    <div className="p-5">
                       <div className="text-center text-2xl font-bold text-gray-800">{status}</div>
                       <div className="font-[sans-serif] space-y-6 mx-auto w-max mt-4">
                         {tasks.filter(task => task.category === status).map((task, index) => (
@@ -247,7 +255,7 @@ const Home = () => {
                                 <div className="py-2 mx-4">
                                   <p className="text-sm font-semibold">{task.title}</p>
                                   <p className="text-xs text-gray-400 mt-0.5">{task.description}</p>
-                                  <p className="text-xs text-gray-500 mt-2">Timestamp: {task.timestamp}</p>
+                                  <p className="text-xs text-gray-500 mt-2">{task.timestamp}</p>
                                 </div>
                                 <div className="flex items-center gap-2 absolute top-2 right-2">
                                   <AiFillEdit className="w-5 h-5 text-blue-600 cursor-pointer" onClick={() => handleEdit(task)} />

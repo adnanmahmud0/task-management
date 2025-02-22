@@ -2,15 +2,42 @@ import { FaGoogle } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
 import { useContext } from 'react';
 import { AuthContext } from '../provider/AuthProvider';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 const Register = () => {
-    const {createUser, updateUserProfile} = useContext(AuthContext);
+    const { createUser, updateUserProfile } = useContext(AuthContext);
     const { register, handleSubmit } = useForm();
+    const navigate = useNavigate();
 
     const onSubmit = (data) => {
-        console.log(data);
-        createUser(data.email, data.password);
-        updateUserProfile(data.name, data.image);
+        if (!data.name || !data.image || !data.email || !data.password) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Missing Fields',
+                text: 'Please fill in all fields before submitting.',
+            });
+            return;
+        }
+
+        createUser(data.email, data.password)
+            .then(() => {
+                return updateUserProfile(data.name, data.image);
+            })
+            .then(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Registration Successful',
+                    text: 'Your account has been created successfully!',
+                }).then(() => navigate('/'));
+            })
+            .catch((error) => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Registration Failed',
+                    text: error.message || 'Something went wrong during registration.',
+                });
+            });
     };
 
     return (
@@ -56,20 +83,11 @@ const Register = () => {
                         />
                     </div>
 
-                    <button type="submit" className="cursor-pointer w-full py-3 px-6 text-sm tracking-wide rounded-md text-white bg-gray-800 hover:bg-gray-900 focus:outline-none transition-all">
+                    <button type="submit" className="cursor-pointer w-full py-3 px-6 text-sm tracking-wide rounded-md text-white bg-[#3086B3] hover:bg-[#11EEC8] focus:outline-none transition-all">
                         Sign up
                     </button>
                 </form>
 
-                <div className="flex items-center my-6">
-                    <div className="flex-grow h-px bg-gray-300"></div>
-                    <span className="px-4 text-sm text-gray-500">or</span>
-                    <div className="flex-grow h-px bg-gray-300"></div>
-                </div>
-
-                <button type="button" className="w-full py-3 px-6 text-sm tracking-wide rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none transition-all flex items-center justify-center gap-2">
-                    <FaGoogle /> Sign up with Google
-                </button>
             </div>
         </div>
     );

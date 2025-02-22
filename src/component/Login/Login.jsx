@@ -3,14 +3,43 @@ import taskManagement from '../../assets/logowhte.png';
 import { useForm } from 'react-hook-form';
 import { useContext } from 'react';
 import { AuthContext } from '../provider/AuthProvider';
+import { Link, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 const Login = () => {
-    const {loginUser} = useContext(AuthContext);
+  const { loginUser, signInWithGoogle } = useContext(AuthContext);
   const { register, handleSubmit } = useForm();
+  const navigate = useNavigate();
+
+  const googleHandeler = () => {
+    signInWithGoogle();
+  };
 
   const onSubmit = (data) => {
-    console.log(data); // Log the form data
-    loginUser(data.email, data.password);
+    if (!data.email || !data.password) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Fields',
+        text: 'Please fill in both email and password.',
+      });
+      return;
+    }
+
+    loginUser(data.email, data.password)
+      .then(result => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Login Successful',
+          text: 'You have successfully logged in!',
+        }).then(() => navigate('/'));
+      })
+      .catch(error => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Login Failed',
+          text: error.message || 'Invalid email or password.',
+        });
+      });
   };
 
   return (
@@ -27,21 +56,21 @@ const Login = () => {
               />
             </a>
             <h2 className="lg:text-4xl text-2xl font-extrabold lg:leading-[50px] text-white">
-              Seamless Login for Exclusive Access
+              Seamless Login for Task Management Access
             </h2>
             <p className="text-sm mt-6 text-white">
-              Immerse yourself in a hassle-free login journey with our intuitively designed login form. Effortlessly access your account.
+              Drag and drop your way to a more organized life. Use Task Management to keep track of all your tasks and projects in one place.
             </p>
             <p className="text-sm mt-6 text-white">
               Do not have an account?
-              <a href="#" className="text-white font-semibold underline ml-1">Register here</a>
+              <Link to="/register" className="text-white font-semibold underline ml-1">Register here</Link>
             </p>
           </div>
 
           {/* Login Form */}
           <form
             className="bg-white rounded-xl px-6 py-8 space-y-6 max-w-md md:ml-auto w-full"
-            onSubmit={handleSubmit(onSubmit)} // Handle form submission
+            onSubmit={handleSubmit(onSubmit)}
           >
             <h3 className="text-3xl font-extrabold mb-12">Sign in</h3>
 
@@ -52,7 +81,6 @@ const Login = () => {
                 name="email"
                 type="email"
                 autoComplete="email"
-                required
                 className="bg-gray-100 focus:bg-transparent w-full text-sm px-4 py-3.5 rounded-md outline-gray-800"
                 placeholder="Email address"
               />
@@ -61,7 +89,6 @@ const Login = () => {
                 name="password"
                 type="password"
                 autoComplete="current-password"
-                required
                 className="bg-gray-100 focus:bg-transparent w-full text-sm px-4 py-3.5 rounded-md outline-gray-800"
                 placeholder="Password"
               />
@@ -70,7 +97,7 @@ const Login = () => {
             {/* Forgot Password */}
             <div className="text-sm text-right">
               <a href="#" className="text-blue-600 font-semibold hover:underline">
-                Forgot your password?
+                {/* Forgot your password? */}
               </a>
             </div>
 
@@ -87,7 +114,7 @@ const Login = () => {
 
             {/* Social Login Buttons */}
             <div className="space-x-6 flex justify-center">
-              <button type="button" className="border-none outline-none text-red-500 hover:text-red-600 transition">
+              <button onClick={googleHandeler} type="button" className="cursor-pointer border-none outline-none text-[#3086B3] hover:text-[#11EFC8] transition">
                 <FaGoogle size={30} />
               </button>
             </div>
