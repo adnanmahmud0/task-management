@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { AiFillCheckCircle, AiOutlineWarning, AiFillCloseCircle, AiOutlineMail, AiFillEdit, AiFillDelete } from "react-icons/ai";
 import axios from "axios";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";  // Import DnD components
+import io from "socket.io-client";  // Import socket.io-client
+
+const socket = io("http://localhost:3000");  // Connect to the WebSocket server
 
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,8 +35,24 @@ const Home = () => {
   };
 
   useEffect(() => {
+    // Fetch initial tasks from the server
     fetchTasks();
-  }, []);
+
+    // Listen for task updates through WebSocket
+    socket.on("taskUpdated", (updatedTask) => {
+        setTasks((prevTasks) =>
+            prevTasks.map((task) =>
+                task._id === updatedTask._id ? updatedTask : task
+            )
+        );
+    });
+
+    // Cleanup the WebSocket listener when the component unmounts
+    return () => {
+        socket.off("taskUpdated");
+    };
+}, []);
+
 
   const resetForm = () => {
     setTitle("");
@@ -100,12 +119,13 @@ const Home = () => {
     const { _id, ...updateData } = { ...movedTask, category: destination.droppableId };
 
     try {
-        await axios.put(`http://localhost:3000/tasks/${_id}`, updateData);
-        fetchTasks(); // Refresh tasks after update
+      await axios.put(`http://localhost:3000/tasks/${_id}`, updateData);
+      socket.emit("taskUpdated", updateData);  // Emit the update to the WebSocket server
+      fetchTasks(); // Refresh tasks after update
     } catch (error) {
-        console.error("Error updating task category:", error);
+      console.error("Error updating task category:", error);
     }
-};
+  };
 
 
   return (
